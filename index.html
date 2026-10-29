@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Actuator notes</title>
+<meta name="description" content="Notes and interactive models on how robot actuators are designed: motors, gears, sensors and the trade-offs between them.">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="blog.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+<header class="site-header"><div class="inner">
+  <a class="brand" href="./"><svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="11" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="14" cy="14" r="3.5" fill="currentColor"/><path d="M14 3v4M14 21v4M3 14h4M21 14h4" stroke="currentColor" stroke-width="2.2"/></svg>Actuator notes</a>
+  <nav><a href="./">Posts</a><button class="theme-btn">Light / dark</button></nav>
+</div></header>
+
+<main class="posts">
+<h1>Actuator notes</h1>
+<p class="lede">Notes on designing the actuators inside robots. Each part of a joint, motor, gearbox, sensor, drive, has knobs that trade one thing for another. These pages make the trade-offs visible with small interactive models.</p>
+
+<a class="post-card" href="rotating-field/">
+  <h2>How three currents turn a rotor</h2>
+  <p>The rotating field in a brushless motor on a real stator: teeth lit by their phase currents, the magnets chasing the pattern, six-step vs sinusoidal drive, timing errors, load steps and a speed loop.</p>
+  <div class="meta">October 2026 · interactive</div>
+</a>
+</main>
+
+<footer class="site-footer"><div class="inner">Written by Matthieu · the models run entirely in your browser and send nothing anywhere.</div></footer>
+</body>
+</html>

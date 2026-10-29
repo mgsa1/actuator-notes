@@ -1,0 +1,29 @@
+/* Blog layout on top of the shared Actuator Atlas tokens and components (style.css). */
+.site-header { border-bottom: 1px solid var(--line); background: var(--surface); }
+.site-header .inner { width: min(960px, 100% - 32px); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; }
+.site-header .brand { margin: 0; }
+.site-header nav a { margin-left: 18px; font-size: .92rem; color: var(--ink-2); }
+.site-header nav a:hover { color: var(--ink); }
+.site-header .theme-btn { border: 1px solid var(--line); background: var(--surface-2); border-radius: 6px; padding: 4px 10px; font-size: .82rem; margin-left: 18px; }
+article.post, .posts { width: min(960px, 100% - 32px); margin: 0 auto; padding: 36px 0 80px; }
+article.post > p, article.post > h2, article.post > h3, article.post > ul, article.post > ol, article.post > .formula, article.post > .callout, article.post > dl { max-width: 760px; }
+article.post .meta { color: var(--muted); font-size: .9rem; margin-bottom: 1.6rem; }
+article.post .lede { max-width: 760px; }
+article.post .interactive { margin: 1.8rem 0; }
+dl.defs { max-width: 760px; }
+dl.defs dt { font-weight: 650; margin-top: .9rem; }
+dl.defs dd { margin: .2rem 0 0 0; color: var(--ink-2); }
+.posts h1 { margin-bottom: .3rem; }
+.posts .lede { max-width: 760px; }
+.post-card { display: block; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 18px 20px; margin-top: 1.2rem; color: inherit; max-width: 760px; }
+.post-card:hover { border-color: var(--accent); text-decoration: none; }
+.post-card h2 { border: 0; margin: 0 0 .3rem; padding: 0; font-size: 1.25rem; }
+.post-card p { margin: 0; color: var(--ink-2); }
+.post-card .meta { color: var(--muted); font-size: .84rem; margin-top: .5rem; }
+footer.site-footer { border-top: 1px solid var(--line); color: var(--muted); font-size: .86rem; }
+footer.site-footer .inner { width: min(960px, 100% - 32px); margin: 0 auto; padding: 18px 0 40px; }
+.try { max-width: 760px; }
+.try li { margin-bottom: .6rem; }
+.keyline { font-size: .8rem; color: var(--ink-2); display: flex; gap: 14px; flex-wrap: wrap; margin: 4px 0 8px; }
+.keyline span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--c); margin-right: 5px; vertical-align: -1px; }
+.stack { display: grid; gap: 6px; }

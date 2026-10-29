@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How three currents turn a rotor · Actuator notes</title>
+<meta name="description" content="Interactive model of the rotating field in a brushless motor on a real stator: phase currents, torque angle, six-step vs sinusoidal drive, timing errors, load steps and speed control.">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../blog.css">
+<script src="../app.js" defer></script>
+<script src="field.js" defer></script>
+<style>
+  figure.key { margin: 1rem 0 1.6rem; max-width: 960px; }
+  .key-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 720px) { .key-grid { grid-template-columns: 1fr; } }
+  .key svg.diagram { width: 100%; height: auto; display: block; border: 1px solid var(--line-soft); border-radius: var(--radius); background: var(--surface); }
+  table.key-table { border-collapse: collapse; width: 100%; font-size: .9rem; margin: 0; }
+  table.key-table th { text-align: left; font-weight: 650; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 0 8px 6px 0; border-bottom: 1px solid var(--line); }
+  table.key-table td { padding: 7px 8px 7px 0; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  table.key-table td.n { width: 24px; font-variant-numeric: tabular-nums; color: var(--muted); }
+  table.key-table td.sym { width: 64px; }
+  table.key-table td.sym svg { width: 56px; height: 20px; display: block; }
+  table.key-table td.el { width: 120px; font-weight: 600; }
+  figcaption.key-cap { font-size: .86rem; color: var(--ink-2); margin-top: 10px; max-width: 760px; text-align: left; }
+  @media (max-width: 720px) { table.key-table td.el { width: 90px; } }
+  figcaption.key-cap b { color: var(--ink); }
+  .num { fill: var(--surface); stroke: var(--ink); stroke-width: 1.2; }
+  .numt { fill: var(--ink); font-size: 9px; font-weight: 700; }
+</style>
+</head>
+<body>
+<header class="site-header"><div class="inner">
+  <a class="brand" href="../"><svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="11" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="14" cy="14" r="3.5" fill="currentColor"/><path d="M14 3v4M14 21v4M3 14h4M21 14h4" stroke="currentColor" stroke-width="2.2"/></svg>Actuator notes</a>
+  <nav><a href="../">Posts</a><button class="theme-btn">Light / dark</button></nav>
+</div></header>
+
+<article class="post">
+<div class="eyebrow">Brushless motors · interactive</div>
+<h1>How three currents turn a rotor</h1>
+<div class="meta">October 2026</div>
+<p class="lede">A brushless motor is a ring of stator teeth, one coil per tooth, inside a ring of permanent magnets. The drive feeds three phase currents into the coils. This model shows what those currents do: it lights every tooth with the current in its coil, extracts the resulting field, and lets the magnets chase it.</p>
+
+<h2 id="read">How to read the drawing</h2>
+<figure class="key">
+<div class="key-grid">
+<svg class="diagram" viewBox="0 0 300 250" aria-label="Key to the drawing with numbered callouts">
+  <defs>
+    <marker id="kb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--s1)"/></marker>
+    <marker id="kk" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--ink)"/></marker>
+  </defs>
+  <!-- 3: magnets -->
+  <path d="M40,30 A160,160 0 0 1 150,12 L150,34 A138,138 0 0 0 55,50 Z" fill="var(--s8)" fill-opacity=".85"/>
+  <path d="M150,12 A160,160 0 0 1 260,30 L245,50 A138,138 0 0 0 150,34 Z" fill="var(--s1)" fill-opacity=".85"/>
+  <text x="100" y="36" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">N</text>
+  <text x="200" y="36" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">S</text>
+  <!-- tooth stem + tip, 2: tip -->
+  <path d="M138,150 L138,76 L118,76 L118,62 L182,62 L182,76 L162,76 L162,150 Z" fill="var(--line)" stroke="var(--ink-2)" stroke-width=".8"/>
+  <rect x="118" y="62" width="64" height="9" fill="var(--s8)" fill-opacity=".9"/>
+  <!-- 1: coil -->
+  <rect x="126" y="86" width="48" height="56" fill="var(--s2)" fill-opacity=".9" stroke="var(--s2)"/>
+  <text x="150" y="119" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">A⊗</text>
+  <!-- 4, 5, 6: centre -->
+  <line x1="150" y1="228" x2="150" y2="180" stroke="var(--s1)" stroke-width="3" marker-end="url(#kb)"/>
+  <line x1="150" y1="228" x2="198" y2="190" stroke="var(--ink)" stroke-width="3.5" marker-end="url(#kk)"/>
+  <path d="M150,196 A32,32 0 0 1 174,206" fill="none" stroke="var(--s4)" stroke-width="2.5"/>
+  <circle cx="150" cy="228" r="4" fill="var(--ink)"/>
+  <!-- callouts -->
+  <g font-family="inherit">
+    <line x1="174" y1="114" x2="214" y2="114" stroke="var(--muted)"/><circle class="num" cx="222" cy="114" r="7"/><text class="numt" x="222" y="117.5" text-anchor="middle">1</text>
+    <line x1="118" y1="66" x2="86" y2="66" stroke="var(--muted)"/><circle class="num" cx="78" cy="66" r="7"/><text class="numt" x="78" y="69.5" text-anchor="middle">2</text>
+    <line x1="246" y1="44" x2="262" y2="60" stroke="var(--muted)"/><circle class="num" cx="268" cy="66" r="7"/><text class="numt" x="268" y="69.5" text-anchor="middle">3</text>
+    <line x1="146" y1="188" x2="110" y2="188" stroke="var(--muted)"/><circle class="num" cx="102" cy="188" r="7"/><text class="numt" x="102" y="191.5" text-anchor="middle">4</text>
+    <line x1="196" y1="186" x2="218" y2="172" stroke="var(--muted)"/><circle class="num" cx="226" cy="168" r="7"/><text class="numt" x="226" y="171.5" text-anchor="middle">5</text>
+    <line x1="170" y1="212" x2="196" y2="222" stroke="var(--muted)"/><circle class="num" cx="204" cy="225" r="7"/><text class="numt" x="204" y="228.5" text-anchor="middle">6</text>
+  </g>
+</svg>
+<table class="key-table">
+<thead><tr><th></th><th>Symbol</th><th>Element</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td class="n">1</td><td class="sym"><svg viewBox="0 0 56 20"><rect x="0" y="3" width="14" height="14" rx="3" fill="var(--s2)"/><rect x="18" y="3" width="14" height="14" rx="3" fill="var(--s3)"/><rect x="36" y="3" width="14" height="14" rx="3" fill="var(--s7)"/></svg></td><td class="el">Coil</td><td>Colour: phase A, B, C. Fill intensity ∝ |<i>i</i>|. ⊗ current into the page, ⊙ out of it.</td></tr>
+<tr><td class="n">2</td><td class="sym"><svg viewBox="0 0 56 20"><rect x="0" y="3" width="24" height="14" rx="3" fill="var(--s8)"/><rect x="28" y="3" width="24" height="14" rx="3" fill="var(--s1)"/></svg></td><td class="el">Tooth tip</td><td>Pole of the tooth at this instant: N (red) or S (blue). Opacity ∝ |<i>F<sub>k</sub></i>|, the tooth's magnetomotive force.</td></tr>
+<tr><td class="n">3</td><td class="sym"><svg viewBox="0 0 56 20"><path d="M2,16 A60,60 0 0 1 27,6 L27,16 Z" fill="var(--s8)"/><path d="M29,6 A60,60 0 0 1 54,16 L29,16 Z" fill="var(--s1)"/></svg></td><td class="el">Magnets</td><td>Rotor, 2<i>p</i> magnets, N and S alternating.</td></tr>
+<tr><td class="n">4</td><td class="sym"><svg viewBox="0 0 56 20"><line x1="4" y1="10" x2="44" y2="10" stroke="var(--s1)" stroke-width="3" marker-end="url(#kb)"/></svg></td><td class="el">Rotor axis</td><td>Direction of the rotor's S-pole axis, <i>θ<sub>r</sub></i>.</td></tr>
+<tr><td class="n">5</td><td class="sym"><svg viewBox="0 0 56 20"><line x1="4" y1="10" x2="44" y2="10" stroke="var(--ink)" stroke-width="3.5" marker-end="url(#kk)"/></svg></td><td class="el">Stator field</td><td>Nearest peak of the fundamental of the stator magnetomotive force. Length ∝ amplitude.</td></tr>
+<tr><td class="n">6</td><td class="sym"><svg viewBox="0 0 56 20"><path d="M8,17 A26,26 0 0 1 40,4" fill="none" stroke="var(--s4)" stroke-width="2.5"/></svg></td><td class="el">Torque angle</td><td><i>δ</i>, from (4) to (5), in electrical degrees. Torque ∝ sin <i>δ</i>; maximum at 90°.</td></tr>
+<tr><td class="n">7</td><td class="sym"><svg viewBox="0 0 56 20"><path d="M2,14 H10 V6 H18 V14 H26 V4 H34 V14 H42 V8 H50" fill="none" stroke="var(--muted)" stroke-width="1.5"/><path d="M2,10 C8,2 14,2 20,10 S32,18 38,10 S50,2 54,10" fill="none" stroke="var(--ink)" stroke-width="1.8"/></svg></td><td class="el">Gap strip</td><td>Air gap unrolled, 0 to 360° mechanical. Steps: <i>F<sub>k</sub></i> per tooth. Curve: its fundamental. Band: magnets.</td></tr>
+</tbody>
+</table>
+</div>
+<figcaption class="key-cap"><b>Figure 1.</b> Key to the live drawing. One tooth with its coil (1) and pole tip (2), one magnet pair (3), and the centre indicators: rotor axis (4), stator field (5), torque angle (6). The gap strip (7) appears under the drawing.</figcaption>
+</figure>
+
+<div class="interactive" id="rf">
+<div class="ititle">Rotating field, commutation and load</div>
+<div class="ihelp">Currents are commutated from the measured rotor angle. Change the motor, the drive, the timing, the load. In <strong>hold target speed</strong> mode a speed loop sets the current for you; watch it change as the load changes.</div>
+<div class="controls">
+<div class="ctl"><label>Motor <select name="motor"><option value="3,2">3 coils, 2 poles (textbook)</option><option value="9,8">9 teeth, 8 magnets</option><option value="12,10">12 teeth, 10 magnets</option><option value="12,14" selected>12 teeth, 14 magnets</option><option value="24,22">24 teeth, 22 magnets</option></select></label></div>
+<div class="ctl"><label>Drive <select name="mode"><option value="sine">sinusoidal (field-oriented control)</option><option value="six">six-step (Hall sensors)</option></select></label></div>
+<div class="ctl"><label>Control <select name="ctrl"><option value="current">set the current</option><option value="speed">hold target speed</option></select></label></div>
+<div class="ctl"><label>Target speed <output></output></label><input type="range" name="wset" min="0" max="1.3" step="0.05" value="0.6" data-fmt="2" data-unit="cycles/s"></div>
+<div class="ctl"><label>Phase current amplitude <output></output></label><input type="range" name="i0" min="0" max="1" step="0.05" value="0.6" data-fmt="2" data-unit="per unit"></div>
+<div class="ctl"><label>Timing advance <output></output></label><input type="range" name="adv" min="-90" max="90" step="5" value="0" data-fmt="0" data-unit="° electrical"></div>
+<div class="ctl"><label>Load torque <output></output></label><input type="range" name="load" min="0" max="1" step="0.05" value="0.15" data-fmt="2" data-unit="per unit"></div>
+</div>
+<div class="btnrow"><button class="btn" id="rf-push">Push the load for 1.5 s</button><button class="btn" id="rf-slow">Slow motion</button></div>
+<div class="two">
+  <div><svg id="rfsvg" class="anim" viewBox="0 0 400 400" width="100%" aria-label="Stator teeth lit by their phase currents, and the rotor"></svg>
+  <div id="rf-cap" style="text-align:center;font-size:.82rem;color:var(--ink-2);margin-top:4px">—</div></div>
+  <div class="stack">
+    <svg id="rfplot1" data-w="560" data-h="190"></svg>
+    <svg id="rfplot2" data-w="560" data-h="190"></svg>
+  </div>
+</div>
+<svg id="rfgap" data-w="960" data-h="210" style="margin-top:8px"></svg>
+<div class="readout">
+  <div class="stat"><div class="k">torque angle</div><div class="v" id="rf-d">—<span class="u">° electrical</span></div></div>
+  <div class="stat"><div class="k">current</div><div class="v" id="rf-i">—<span class="u">per unit</span></div></div>
+  <div class="stat"><div class="k">torque</div><div class="v" id="rf-t">—<span class="u">per unit</span></div></div>
+  <div class="stat"><div class="k">torque ripple</div><div class="v" id="rf-r">—<span class="u">% of mean</span></div></div>
+  <div class="stat"><div class="k">electrical speed</div><div class="v" id="rf-w">—<span class="u">cycles/s</span></div></div>
+  <div class="stat"><div class="k">rotor speed</div><div class="v" id="rf-wm">—<span class="u">rev/s</span></div></div>
+</div>
+</div>
+
+<h2 id="try">Things to try</h2>
+<ol class="try">
+<li><strong>12 teeth, 14 magnets, sinusoidal.</strong> The pole pattern laps the stator; the rotor turns 1/7 of a turn per lap. Both speeds are in the readouts.</li>
+<li><strong>3 coils, 2 poles.</strong> One lap of the pattern is one lap of the rotor, and the 90° torque angle is 90° on the drawing. The 12-tooth motor is the same physics folded seven times.</li>
+<li><strong>Six-step.</strong> Square-wave currents, six pattern positions per cycle, torque angle swinging 60° to 120°, ripple about 14%. That is the hum of a cheap drive.</li>
+<li><strong>Timing advance.</strong> Torque falls as cos(advance): at 60° you get half the torque for the same current and heat. A misaligned Hall sensor does this.</li>
+<li><strong>Push the load.</strong> The rotor slows; the torque angle stays at 90° because the controller re-aims from the measured angle; speed settles where torque = load + friction. Load above the current amplitude stalls the motor.</li>
+<li><strong>Hold target speed.</strong> Switch Control to "hold target speed". The current slider is now driven by a PI speed loop. Raise the load and watch the current rise to hold speed; push the load and watch it recover. Ask for more speed than the current limit allows (1 per unit) and the slider pins at the limit while the speed falls short.</li>
+</ol>
+
+<h2 id="how">What is computed</h2>
+<ul>
+<li>Tooth <i>k</i> carries magnetomotive force <i>F<sub>k</sub></i> = (winding sign) × (phase current). Phases are assigned by the star-of-slots rule for the chosen tooth and magnet counts.</li>
+<li>The stator field is the fundamental of the <i>F<sub>k</sub></i> staircase around the gap, the spatial harmonic with <i>p</i> cycles per turn, <i>p</i> = magnet pairs. It is extracted by a discrete Fourier transform over the teeth every frame. Higher harmonics make no average torque.</li>
+<li>Torque = (fundamental amplitude) × sin(torque angle), per unit: 1 = the torque of a sinusoidal current set of amplitude 1.</li>
+<li>Rotor: <i>J</i> dω/dt = torque − load − <i>B</i>ω, electrical units, <i>J</i> and <i>B</i> chosen for legibility.</li>
+<li>Controller, sinusoidal: reads the rotor angle, adds 90° plus the timing advance, sets the three currents that put the fundamental's peak there. Six-step: picks the nearest of the six two-phase patterns.</li>
+<li>Speed loop: current = <i>K<sub>p</sub></i>·(ω<sub>target</sub> − ω) + <i>K<sub>i</sub></i>·∫(ω<sub>target</sub> − ω) dt, clamped to the drive's current limit, with anti-windup.</li>
+</ul>
+
+<h2 id="not">Not in the model</h2>
+<ul>
+<li>No steel: no flux concentration, no saturation, no cogging. Newton-metres per ampere need a field simulation of the real cross-section.</li>
+<li>Magnet field assumed sinusoidal. A trapezoidal motor reverses which drive ripples.</li>
+<li>Ideal controller: exact angle, instant currents, no inductance, no sampling delay.</li>
+</ul>
+
+<p class="meta" style="margin-top:2rem">Runs in your browser, sends nothing. Electrical degrees = mechanical degrees × <i>p</i>.</p>
+</article>
+
+<footer class="site-footer"><div class="inner"><a href="../">← All posts</a> · Written by Matthieu</div></footer>
+</body>
+</html>
