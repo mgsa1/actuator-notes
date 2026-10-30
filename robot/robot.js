@@ -137,7 +137,7 @@ export function mountRobot(root) {
   new ResizeObserver(resize).observe(canvasHost); resize();
 
   function frame(now) {
-    if (playing) { t = (t + (now - last) / 1000 / 1.6) % 1; phaseIn.value = t.toFixed(3); pose(t); }
+    if (playing) { t = (t + (now - last) / 1000 / 3.2) % 1; phaseIn.value = t.toFixed(3); pose(t); }
     last = now;
     if (controls) controls.update();
     renderer.render(scene, camera);
