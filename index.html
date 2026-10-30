@@ -3,29 +3,88 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Actuator notes</title>
-<meta name="description" content="Notes and interactive models on how robot actuators are designed: motors, gears, sensors and the trade-offs between them.">
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="blog.css">
+<title>Actuator notes · How to build a million actuators</title>
+<meta name="description" content="A chapter-by-chapter study of the Unitree GO-M8010-6 joint actuator, from the brushless motor to the driver board, ending in a simulated autonomous production line.">
+<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="blog.css?v=2">
+<link rel="stylesheet" href="explode/explode.css?v=6">
+<link rel="stylesheet" href="robot/robot.css?v=1">
 <script src="app.js" defer></script>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+<script type="module" src="explode/explode.js?v=8"></script>
+<script type="module" src="robot/robot.js?v=5"></script>
+<style>
+  .chapters { list-style: none; padding: 0; margin: 1.2rem 0 0; max-width: 660px; border-top: 1px solid var(--line); }
+  .chapters li { display: grid; grid-template-columns: 3rem 1fr; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--line-soft); align-items: baseline; }
+  .chapters .n { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .chapters .t { font-weight: 500; }
+  .chapters .soon { color: var(--muted); font-size: .82rem; float: right; margin-left: 12px; font-weight: 400; }
+  .chapters a { text-decoration: none; }
+  figure.cover { float: right; width: 150px; margin: 4px max(0px, calc(100% - 850px)) 12px 28px; }
+  figure.cover img { width: 150px; height: auto; display: block; border: 1px solid var(--line-soft); }
+  figure.cover figcaption { font-size: .76rem; color: var(--muted); margin-top: 6px; line-height: 1.35; }
+  @media (max-width: 560px) { figure.cover { float: none; margin: 0 0 1rem; } }
+  .chapters li:not(:has(a)) .n, .chapters li:not(:has(a)) .t { color: var(--muted); }
+  .chapters li:not(:has(a)) .t { font-weight: 400; }
+  .chapters a:hover .t { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
+</style>
 </head>
 <body>
 <header class="site-header"><div class="inner">
   <a class="brand" href="./"><svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="11" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="14" cy="14" r="3.5" fill="currentColor"/><path d="M14 3v4M14 21v4M3 14h4M21 14h4" stroke="currentColor" stroke-width="2.2"/></svg>Actuator notes</a>
-  <nav><a href="./">Posts</a><button class="theme-btn">Light / dark</button></nav>
+  <nav><a href="./">Series</a><button class="theme-btn">Light / dark</button></nav>
 </div></header>
 
 <main class="posts">
-<h1>Actuator notes</h1>
-<p class="lede">Notes on designing the actuators inside robots. Each part of a joint, motor, gearbox, sensor, drive, has knobs that trade one thing for another. These pages make the trade-offs visible with small interactive models.</p>
+<div class="eyebrow">A series</div>
+<h1>How to build a million actuators</h1>
 
+<p class="lede">Everyone is talking about reindustrialization, and you might catch me among them. Hopes are high that robotics will fill the workforce gap, bring down the cost of making things, and usher in a new golden age of industrial production in the West. But who will build the robots, and how?</p>
+
+<figure class="cover"><img src="img/the-world-is-flat-cover.gif" width="184" height="255" alt="Cover of The World Is Flat: sailing ships pouring over the edge of a flat sea"><figcaption>Thomas L. Friedman, <i>The World Is Flat</i> (2005). Cover painting: Ed Miracle, <i>I Told You So</i>.</figcaption></figure>
+<p>In The World Is Flat, Thomas Friedman argued that globalization was removing geographical barriers to competition. Today, I can buy actuators or complete robots from China with a few clicks. Making the same part in California or Europe is another story. Decades of specialization, investment, and industrial policy have built supplier ecosystems that are hard to replicate on either side of the Atlantic (Apple in China tells this story well). Could we design products and factories differently, using automation to make up for the suppliers and industrial know-how we no longer have?</p>
+
+<p>I have been wondering what it would take to design a fully autonomous production line for robot actuators. Let's try to do just that. Through the teardown of a real robot actuator, I'll dive into its components, the key design decisions involved in building one, and how those decisions affect the way it could be manufactured in a fully autonomous factory.</p>
+
+<p>My name is Matthieu. I am a mechanical engineer from ETH Zurich that spent his early career building sensors and robots systems.</p>
+
+<h2 style="border:0;margin-top:2rem">Why care about actuators?</h2>
+<p>An actuator is the unit at each joint of a robot that turns electrical power into controlled motion. Electric actuators now power some of the most advanced robots in the world. Take Boston Dynamics' Atlas, which went from hydraulics to an all-electric design.</p>
+<p>A rotary actuator typically provides one degree of freedom. Atlas has 56. Elon Musk has talked about producing 20,000 Optimus robots per week. Actuators account for an estimated 40–60% of a humanoid robot's hardware cost. If robotics startups deliver on their promises to their investors, demand for actuators is set to balloon.</p>
+<p>This makes actuators an interesting case for reindustrialization: mechanically complex, relatively expensive, and potentially needed in enormous volumes. Could fully automated, flexible manufacturing make it economical to produce them in the West?</p>
+<p>In the coming weeks, I'll explore the key components of an actuator—the motor, gearbox, and control board—and how each could be produced in a simulated manufacturing plant.</p>
+<p>To keep complexity in check, we'll anchor our research in Unitree's GO-M8010-6, the hip actuator of its Go2 robot dog.</p>
+<p>Enjoy!<br>mgsa</p>
+
+<h2 style="border:0;margin-top:2rem">Where it lives</h2>
+<p>The Go2 has twelve of these modules, three per leg: one swings the leg out from the body, one swings it forward and back, one bends the knee. Below, the robot is drawn from Unitree's own published description of it, with the twelve modules marked and the three of the front-left leg in orange. Press play to see what each one does during a stride. The knee module drives the calf through a rod, which is why that joint is rated at twice the torque and half the speed of the other two.</p>
+<div class="robot" data-model="models/go2.glb" data-tree="models/go2.json"></div>
+<p class="meta">Model: Unitree Go2 robot description from the unitree_ros package (BSD-3 licence), meshes simplified; joint ranges and ratings from the same file. The stride is a drawn gait, not a recording.</p>
+
+<h2 style="border:0;margin-top:2rem">The module, exploded</h2>
+<p>Drag the slider to pull the GO-M8010-6 apart along its axis. One label per chapter.</p>
+<div class="explode" data-model="models/go-m8010-6.glb" data-set="module"></div>
+<p class="meta">Model: Unitree customer STEP (2022) for the outer parts; internals reconstructed, dimensions estimated.</p>
+
+<h2 style="border:0;margin-top:2rem">Chapters</h2>
+<ol class="chapters">
+  <li><a href="go-m8010-6/01-motor/" style="display:contents"><span class="n">1</span><div><span class="t">The brushless motor</span></div></a></li>
+  <li><span class="n">2</span><div><span class="t">The planetary gearbox</span><span class="soon">upcoming</span></div></li>
+  <li><span class="n">3</span><div><span class="t">The encoder</span><span class="soon">upcoming</span></div></li>
+  <li><span class="n">4</span><div><span class="t">The driver board</span><span class="soon">upcoming</span></div></li>
+  <li><span class="n">5</span><div><span class="t">Housing, bearings and heat</span><span class="soon">upcoming</span></div></li>
+  <li><span class="n">6</span><div><span class="t">Assembly and end-of-line test</span><span class="soon">upcoming</span></div></li>
+  <li><span class="n">7</span><div><span class="t">The line</span><span class="soon">upcoming</span></div></li>
+</ol>
+
+<h2 style="border:0;margin-top:2.4rem">Also on this site</h2>
 <a class="post-card" href="rotating-field/">
   <h2>How three currents turn a rotor</h2>
-  <p>The rotating field in a brushless motor on a real stator: teeth lit by their phase currents, the magnets chasing the pattern, six-step vs sinusoidal drive, timing errors, load steps and a speed loop.</p>
+  <p>A standalone interactive model of the rotating field in a brushless motor: teeth lit by their phase currents, the magnets chasing the pattern, six-step against sinusoidal drive, timing errors, load steps and a speed loop. Chapter 1 reuses it.</p>
   <div class="meta">October 2026 · interactive</div>
 </a>
 </main>
 
-<footer class="site-footer"><div class="inner">Written by Matthieu · the models run entirely in your browser and send nothing anywhere.</div></footer>
+<footer class="site-footer"><div class="inner">written by mgsa</div></footer>
 </body>
 </html>

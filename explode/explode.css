@@ -1,0 +1,19 @@
+/* Exploded-view viewer */
+.explode { background: var(--surface); border: 1px solid var(--line); padding: 12px 14px 10px; margin: 1.6rem 0; }
+.explode .xp-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 6px; }
+.explode .xp-slider { display: flex; align-items: center; gap: 10px; font-size: .85rem; color: var(--ink-2); }
+.explode .xp-slider input { width: 180px; accent-color: var(--accent); }
+.explode .xp-hover { font-size: .82rem; color: var(--muted); min-height: 1.2em; }
+.explode .xp-hover b { color: var(--ink); font-weight: 600; }
+.explode .xp-canvas { background: var(--surface-2); overflow: hidden; }
+.explode .xp-canvas canvas { display: block; cursor: grab; }
+.explode .xp-canvas canvas:active { cursor: grabbing; }
+/* callouts */
+.explode .xp-canvas { position: relative; }
+.explode .xp-leaders { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.explode .xp-labels { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .15s; }
+.explode .xp-label { position: absolute; transform: translateY(-50%); background: var(--surface); border: 1px solid var(--line); padding: 2px 7px; font-size: .74rem; line-height: 1.25; color: var(--ink); white-space: nowrap; }
+.explode .xp-label b { font-weight: 600; }
+.explode .xp-canvas svg.xp-leaders { background: none; border: 0; margin: 0; border-radius: 0; }
+.explode .xp-filter { display: inline-flex; gap: 6px; }
+.explode .xp-filter .btn { font-size: .8rem; padding: 3px 10px; }

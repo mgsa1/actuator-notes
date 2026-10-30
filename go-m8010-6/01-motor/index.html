@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chapter 1 · The brushless motor · How to build a million actuators</title>
+<meta name="description" content="How a brushless motor turns, with a live model, and the stator and rotor of the Unitree GO-M8010-6 joint module drawn to scale, part by part.">
+<link rel="stylesheet" href="../../style.css?v=2">
+<link rel="stylesheet" href="../../blog.css?v=2">
+<link rel="stylesheet" href="../../explode/explode.css?v=6">
+<script src="../../app.js" defer></script>
+<script type="importmap">{"imports":{"three":"../../vendor/three.module.js"}}</script>
+<script type="module" src="../../explode/explode.js?v=8"></script>
+<script src="../../rotating-field/field.js" defer></script>
+<script src="breakdown.js?v=2" defer></script>
+<style>
+  dl.defs dt { font-weight: 600; margin-top: .9rem; }
+  .spec th:first-child, .spec td:first-child { width: 34%; }
+  figure.bd { max-width: 960px; }
+  figure.bd svg { width: 100%; height: auto; display: block; background: var(--surface); border: 1px solid var(--line); padding: 10px; }
+  .bd-two { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; align-items: start; }
+  @media (max-width: 760px) { .bd-two { grid-template-columns: 1fr; } }
+  .bd-two svg { width: 100%; height: auto; display: block; background: var(--surface); border: 1px solid var(--line); padding: 10px; }
+  figcaption { font-size: .88rem; color: var(--ink-2); margin-top: 10px; max-width: 760px; }
+  figcaption b { color: var(--ink); font-weight: 500; }
+  details.more { margin: 8px 0 0; }
+  details.more summary { cursor: pointer; font-size: .85rem; color: var(--ink-2); }
+  .parts td.n { color: var(--muted); font-variant-numeric: tabular-nums; width: 2.2em; }
+  .parts td.b { font-size: .84rem; color: var(--muted); white-space: nowrap; }
+  .conflict { border: 1px solid var(--line); padding: 16px 18px 12px; margin: 1.8rem 0; max-width: 660px; position: relative; }
+  .conflict .lbl { position: absolute; top: -11px; left: 14px; background: var(--accent); color: #fff; font-size: .76rem; font-weight: 500; padding: 3px 8px; line-height: 1.3; }
+  .srcs li { margin-bottom: .4rem; font-size: .92rem; }
+  sup.s { font-size: .7em; color: var(--accent); }
+</style>
+</head>
+<body>
+<header class="site-header"><div class="inner">
+  <a class="brand" href="../../"><svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="11" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="14" cy="14" r="3.5" fill="currentColor"/><path d="M14 3v4M14 21v4M3 14h4M21 14h4" stroke="currentColor" stroke-width="2.2"/></svg>Actuator notes</a>
+  <nav><a href="../../">Series</a><button class="theme-btn">Light / dark</button></nav>
+</div></header>
+
+<article class="post">
+<div class="eyebrow">How to build a million actuators · Chapter 1</div>
+<h1>The brushless motor</h1>
+<div class="meta">October 2026 · draft for review · part one of three: principle and anatomy</div>
+<p class="lede">Inside the GO-M8010-6, behind the gearbox and in front of the driver board, sits the part that makes all the torque: a ring of copper coils facing a ring of magnets. This chapter explains how that arrangement turns, lets you drive one in a live model, and then takes the real motor apart, stator and rotor, drawn to scale.</p>
+
+<div class="callout"><span class="lbl">What this chapter covers</span>
+The GO-M8010-6 is a complete joint module: a brushless motor, a 6.33:1 planetary gearbox, an absolute encoder and a field-oriented-control board in one housing.<sup class="s">[1]</sup> This chapter takes apart only the <b>motor</b>: the stator with its coils, and the rotor with its magnets. The gearbox is chapter 2, the encoder chapter 3, the board chapter 4, the housing and bearings chapter 5. They appear here only faded, to show where the motor sits.</div>
+
+<h2 id="why">1.1 What the module asks of its motor</h2>
+<p>Unitree rates the module, not the motor, so the motor's duty has to be worked back through the gearbox. The ratings are: peak torque <b>23.7 N·m</b> at the output, maximum output speed <b>30 rad/s</b> at 24 V, maximum current <b>40 A</b>, bus voltage 12 to 30 V, reduction 6.33, all in a housing 96.5 mm across and 42.3 mm deep weighing about 530 g.<sup class="s">[1]</sup></p>
+<p>Dividing the torque by the ratio, the rotor must produce about <b>3.7 N·m</b> at the moment of peak demand. Multiplying the speed by the ratio, it must spin up to about <b>190 rad/s</b>, which is 1,800 revolutions per minute. With 21 pole pairs (section 1.2 explains the term) that is an <b>electrical frequency</b> of about 635 Hz, the rate at which the driver must reverse the current in every coil; it sets how thin the steel sheets must be, which part two will take up. The current limit of 40 A and the bus of 24 V bound the copper: the coils must carry that current for a moment without the enamel burning, and their resistance must be low enough that 24 V can push the current against the motor's own back-voltage at full speed.</p>
+<p>The envelope is the harder constraint. The gearbox takes the front of the housing, the board takes the back, and the motor gets the ring in between, roughly 86 mm in outer diameter by 12 mm long by our estimate from the photographs.<sup class="s">[2]</sup> That shape, a thin wide ring, is why the motor is an <b>outrunner</b> with many poles: torque in a permanent-magnet motor scales with the square of the air-gap radius for a given length, so the design pushes the magnets as far out as the housing allows. The heat has one way out: through the stator into the aluminium hub and housing, with no fan. Unitree says the coils are dipped in varnish partly to improve that path.<sup class="s">[1]</sup></p>
+
+<h2 id="how">1.2 How a brushless motor turns</h2>
+<p>Start with the vocabulary, because the rest of the chapter uses it without further explanation.</p>
+<dl class="defs">
+<dt>Stator</dt><dd>The part that does not move. A ring of steel <b>teeth</b>, separated by <b>slots</b>, each tooth carrying a coil of enamelled copper wire. The steel is a stack of thin sheets (<b>laminations</b>) rather than a solid block, for a reason we get to in part two.</dd>
+<dt>Rotor</dt><dd>The part that turns. A ring of permanent magnets, north and south alternating, on a steel ring called the <b>back iron</b> that closes the magnetic circuit behind them. In an <b>outrunner</b> the magnet ring is outside the stator and spins around it; in an <b>inner-rotor</b> (or inrunner) motor the magnets are inside the stator bore.</dd>
+<dt>Poles and pole pairs</dt><dd>Each magnet is one <b>pole</b>. With 2<i>p</i> magnets there are <i>p</i> <b>pole pairs</b>. The GO-M8010-6 has 42 magnets, so <i>p</i> = 21.</dd>
+<dt>Air gap</dt><dd>The thin cylindrical space, well under a millimetre, between the tooth tips and the magnet faces. All the torque is made across it.</dd>
+<dt>Phase</dt><dd>The coils are wired into three groups, A, B and C, fed by three currents. Which tooth belongs to which phase follows a fixed rule from the slot and pole counts, called the <b>star of slots</b>; the model below applies that rule and colours the teeth accordingly.</dd>
+<dt>Electrical angle</dt><dd>One pole pair is one electrical cycle. Turning the rotor by one pair of magnets (360°/<i>p</i> mechanical) brings the field back to the same state, so the electronics count angles in <b>electrical degrees</b> = mechanical degrees × <i>p</i>. For 21 pole pairs, one mechanical turn is 21 electrical cycles.</dd>
+</dl>
+
+<h3>The mechanism in three sentences</h3>
+<p>A current in a coil wrapped on a steel tooth makes that tooth a magnet, north or south depending on the direction of the current. Feed the three phases with currents that rise and fall in sequence, and the pattern of north and south teeth moves around the stator: a <b>rotating field</b>. The permanent magnets on the rotor are pulled toward the opposite teeth and follow the pattern, so the rotor turns at the speed of the pattern, and the torque that pulls it is largest when the magnets lag the field by a quarter of an electrical cycle, 90° electrical.</p>
+<p>Notice which part moves. In the GO-M8010-6 the coils are on the inside and stay still, and the magnets are on the outside and turn: it is an <b>outrunner</b>. The shaft is attached to the magnet bell, not to the coils.</p>
+<p>That last point is the whole secret of a brushless drive. In a brushed motor, a mechanical switch (the commutator) keeps the field 90° ahead of the rotor automatically. In a brushless motor nothing mechanical does it, so the driver board measures the rotor angle with an encoder, adds 90°, and sets the three currents to put the field there. The torque is then</p>
+<div class="formula"><span class="eq-id">(1)</span><i>τ</i> = <i>K</i><sub>t</sub> · <i>I</i> · sin <i>δ</i></div>
+<p>where <i>τ</i> is the torque in newton-metres, <i>I</i> the amplitude of the phase currents in amperes, <i>δ</i> the <b>torque angle</b> between the rotor's magnet axis and the peak of the stator field in electrical degrees, and <i>K</i><sub>t</sub> the <b>torque constant</b> in N·m/A, a number that belongs to the motor: it collects the magnet strength, the number of turns on each coil, the gap radius and the stack length. With <i>δ</i> held at 90°, torque is simply <i>K</i><sub>t</sub> times current, which is why a joint driven this way can estimate its own torque from the current it measures. For this motor, a teardown measured <i>K</i><sub>t</sub> ≈ 0.26 N·m per ampere at the rotor, before the gearbox.<sup class="s">[2]</sup></p>
+
+<h3>See it move</h3>
+<p>The model below draws a stator and a rotor with the real tooth and magnet counts, lights each tooth with the current in its coil, extracts the resulting field, and lets the magnets chase it. Start with the textbook motor of 3 coils and 2 poles, where one lap of the field is one lap of the rotor, and then switch to the GO-M8010-6's 36 teeth and 42 magnets: the same physics, folded 21 times, so the rotor turns 1/21 of a turn per lap of the field. The full version of this model, with a speed loop and timing errors, is a <a href="../../rotating-field/">separate note</a>.</p>
+
+<div class="interactive" id="rf">
+<div class="ititle">Rotating field, commutation and load</div>
+<div class="ihelp">Currents are commutated from the measured rotor angle, as a real driver does. Change the motor, the drive, the current and the load.</div>
+<div class="controls">
+<div class="ctl"><label>Motor <select name="motor"><option value="3,2">3 coils, 2 poles (textbook)</option><option value="12,14">12 teeth, 14 magnets (one section of the GO-M8010-6)</option><option value="36,42" selected>36 teeth, 42 magnets (GO-M8010-6)</option><option value="18,16">18 teeth, 16 magnets (for comparison: reported Unitree G1 knee motor)</option></select></label></div>
+<div class="ctl"><label>Drive <select name="mode"><option value="sine">sinusoidal (field-oriented control)</option><option value="six">six-step (Hall sensors)</option></select></label></div>
+<div class="ctl"><label>Phase current amplitude <output></output></label><input type="range" name="i0" min="0" max="1" step="0.05" value="0.6" data-fmt="2" data-unit="per unit"></div>
+<div class="ctl"><label>Load torque <output></output></label><input type="range" name="load" min="0" max="1" step="0.05" value="0.15" data-fmt="2" data-unit="per unit"></div>
+</div>
+<details class="more"><summary>More controls: speed loop and timing advance</summary>
+<div class="controls">
+<div class="ctl"><label>Control <select name="ctrl"><option value="current">set the current</option><option value="speed">hold target speed</option></select></label></div>
+<div class="ctl"><label>Target speed <output></output></label><input type="range" name="wset" min="0" max="1.3" step="0.05" value="0.6" data-fmt="2" data-unit="cycles/s"></div>
+<div class="ctl"><label>Timing advance <output></output></label><input type="range" name="adv" min="-90" max="90" step="5" value="0" data-fmt="0" data-unit="° electrical"></div>
+</div></details>
+<div class="btnrow"><button class="btn" id="rf-push">Push the load for 1.5 s</button><button class="btn" id="rf-slow">Slow motion</button></div>
+<div class="two">
+  <div><svg id="rfsvg" class="anim" viewBox="0 0 400 400" width="100%" aria-label="Stator teeth lit by their phase currents, and the rotor"></svg>
+  <div id="rf-cap" style="text-align:center;font-size:.82rem;color:var(--ink-2);margin-top:4px">—</div></div>
+  <div class="stack">
+    <svg id="rfplot1" data-w="560" data-h="190"></svg>
+    <svg id="rfplot2" data-w="560" data-h="190"></svg>
+  </div>
+</div>
+<svg id="rfgap" data-w="960" data-h="210" style="margin-top:8px"></svg>
+<div class="readout">
+  <div class="stat"><div class="k">torque angle</div><div class="v" id="rf-d">—<span class="u">° electrical</span></div></div>
+  <div class="stat"><div class="k">current</div><div class="v" id="rf-i">—<span class="u">per unit</span></div></div>
+  <div class="stat"><div class="k">torque</div><div class="v" id="rf-t">—<span class="u">per unit</span></div></div>
+  <div class="stat"><div class="k">torque ripple</div><div class="v" id="rf-r">—<span class="u">% of mean</span></div></div>
+  <div class="stat"><div class="k">electrical speed</div><div class="v" id="rf-w">—<span class="u">cycles/s</span></div></div>
+  <div class="stat"><div class="k">rotor speed</div><div class="v" id="rf-wm">—<span class="u">rev/s</span></div></div>
+</div>
+</div>
+
+<p>Three things to notice. First, in the drawing the black arrow (the field) stays a quarter cycle ahead of the blue arrow (the rotor) whatever the load, because the controller re-aims from the measured angle every frame; raise the load and the rotor slows, but the angle holds. Second, switch to six-step drive: the field now jumps between six fixed positions, the torque angle swings between 60° and 120°, and the torque trace ripples by about 14 %. That ripple is why joint motors are driven with sinusoidal currents from field-oriented control and not with the cheap six-step method of a cooling fan. Third, compare the 12-teeth motor with the 36-teeth one: the colour pattern of the 36 is the pattern of the 12 repeated three times. The GO-M8010-6 stator is three copies of the smallest useful building block.</p>
+
+<h3>Why 36 teeth and 42 magnets</h3>
+<p>Two integers fix more of a motor's character than any other choice. The ratio <i>q</i> = <i>Q</i> / (3 · 2<i>p</i>), the number of slots per pole per phase, is 36 / 126 = 2/7 for this motor. A fraction below one means a <b>fractional-slot concentrated winding</b>: one coil per tooth, the coil spanning a little less than one magnet, the pattern of a drone motor rather than an industrial servo. Two consequences matter here.</p>
+<p>The <b>winding factor</b> <i>k</i><sub>w</sub> says what fraction of the copper's effort becomes torque: a coil that does not sit exactly under a north and a south pole at the same time loses a little. For 36N42P the star of slots gives <i>k</i><sub>w</sub> = 0.933, recomputed for this page, not read from a table. The <b>cogging</b> count says how many times per turn the unpowered rotor clicks from one preferred position to the next: the least common multiple of 36 and 42, which is 252. Many shallow clicks rather than few deep ones, and the rotor turns smoothly by hand, which matters in a joint whose gearbox is too short to hide it. For comparison, the other classic family is 18 slots and 16 poles, reported for the knee motor of Unitree's G1 humanoid: <i>q</i> = 3/8, <i>k</i><sub>w</sub> = 0.945, 144 cogging cycles per turn. The model above lets you run either.</p>
+
+<h2 id="anatomy">1.3 The motor, part by part</h2>
+<p>Now the real object. Unitree publishes the module's envelope and ratings and a few construction details; a 2025 teardown by Simplexity photographed every subassembly and measured the motor on the bench.<sup class="s">[2]</sup> From those two sources the drawings below are built. The outer dimensions and every count are from the sources; the internal radii are our estimates from the photographs and are labelled as such.</p>
+
+<table class="spec">
+<thead><tr><th>Quantity</th><th>Unitree's figure<sup class="s">[1]</sup></th><th>Measured by Simplexity (one unit)<sup class="s">[2]</sup></th></tr></thead>
+<tbody>
+<tr><td>Module size and mass</td><td>96.5 × 92.5 × 42.3 mm, about 530 g</td><td>"approximately 96 mm diameter, 40 mm deep"</td></tr>
+<tr><td>Rotor type</td><td>not stated</td><td>outrunner</td></tr>
+<tr><td>Slots / poles</td><td>not stated</td><td>36 / 42, delta connected</td></tr>
+<tr><td>Torque constant</td><td>0.639 N·m/A at the output (6.33 × motor)</td><td>0.26 N·m/A at the motor (q-axis)</td></tr>
+<tr><td>Phase resistance / inductance</td><td>not stated</td><td>660 mΩ / 83 µH (from 440 mΩ, 165 µH line-to-line)</td></tr>
+<tr><td>Speed constant</td><td>—</td><td>44 rpm per volt (line-to-line, motor alone)</td></tr>
+<tr><td>Stator steel</td><td>0.2 mm silicon-steel laminations, electrophoretic coating</td><td>—</td></tr>
+<tr><td>Winding</td><td>single-strand wire, dip-varnish impregnated</td><td>one coil per tooth, three leads</td></tr>
+<tr><td>Magnets</td><td>not stated</td><td>42, alternating; material not identified</td></tr>
+</tbody>
+</table>
+
+<figure class="bd">
+<svg id="bd-section" viewBox="0 0 160 132" aria-label="Section of the module along its axis, motor parts highlighted"></svg>
+<figcaption><b>Figure 1.</b> Where the motor sits. A section of the whole module along its axis, output face on the left, drawn in millimetres; the lower half mirrors the upper one. The motor parts are in colour and numbered; the gearbox, bearings, cover and board are faded and belong to later chapters. The rotor (4) hangs from the back of the shaft and wraps around the stator (1), so the magnets (3) face the coils (2) from outside.</figcaption>
+</figure>
+
+<figure class="bd">
+<div class="btnrow" id="bd-tabs">
+  <button class="btn on" data-view="stator">Stator</button>
+  <button class="btn" data-view="rotor">Rotor</button>
+</div>
+<div class="bd-two">
+  <svg id="bd-face" viewBox="0 0 128 128" aria-label="Face-on view of the stator or the rotor"></svg>
+  <figcaption id="bd-face-cap" style="margin-top:0"></figcaption>
+</div>
+<figcaption><b>Figure 2.</b> The two halves of the motor, face on, at the same scale (1 unit = 1 mm). The stator teeth and the magnets are drawn with their real counts; coil shapes are simplified. The dashed circle is the module's outer diameter.</figcaption>
+</figure>
+
+<figure class="bd">
+<div class="explode" data-model="../../models/go-m8010-6.glb" data-set="motor"></div>
+<figcaption><b>Figure 3.</b> The motor in three dimensions, reconstructed. Inside is the <b>stator</b>, which does not move: a laminated ring of 36 teeth pressed onto the aluminium hub, with a coil on every tooth. Around it is the <b>rotor</b>, which turns: a bell carrying 42 magnets on a steel ring, joined to the shaft. Drag the slider to separate them; drag the model to turn it. The lamination (81 mm outside, 58.5 mm inside, 36 slots) is the catalogue part of this motor class; the stack length, magnet size and bell shape are estimates.</figcaption>
+</figure>
+
+<table class="parts">
+<thead><tr><th></th><th>Part</th><th>Moves?</th><th>What it does</th><th>What we know</th><th>Basis</th></tr></thead>
+<tbody>
+<tr><td class="n">1</td><td>Stator</td><td>fixed</td><td>Laminated ring of 36 teeth that carries the coils and guides the flux; pressed onto an aluminium hub that holds the rotor bearings</td><td>36 teeth; 0.2 mm silicon-steel laminations; electrophoretic coating that passes a 48 h salt-spray test; lamination 81 mm outside, 58.5 mm inside (catalogue part of this motor class); stack length unknown, 10 mm assumed</td><td class="b">counted, vendor, catalogue</td></tr>
+<tr><td class="n">2</td><td>Coils</td><td>fixed</td><td>Make the rotating field</td><td>One per tooth; single-strand enamelled wire; dip-varnish impregnated; delta connected (thermal image); three leads soldered to the board</td><td class="b">measured, vendor</td></tr>
+<tr><td class="n">3</td><td>Magnets</td><td>turn</td><td>Field source</td><td>42, north and south alternating, 21 pole pairs; grade not published, sintered neodymium-iron-boron assumed; 5 × 3 × 12 mm and a 0.5 mm air gap taken from an open-source build on the same stator</td><td class="b">counted, estimate</td></tr>
+<tr><td class="n">4</td><td>Rotor</td><td>turns</td><td>Carries the magnets on a steel ring inside an aluminium bell; the shaft carries the sun gear at the front and the encoder magnet at the back</td><td>Spoked cast web joined to the shaft, outer can, steel back-iron ring; the shaft runs in two bearings in the hub</td><td class="b">photo</td></tr>
+</tbody>
+</table>
+
+<div class="conflict"><span class="lbl">Open point: the torque constant</span>
+Unitree's 0.639 N·m/A is at the output and agrees with its own ratings (23.7 N·m at 40 A gives 0.59). Simplexity's 0.26 N·m/A at the motor, multiplied by 6.33, gives 1.65 N·m/A at the output, 2.6 times more. The two numbers cannot both describe the same current. The likely explanation is a convention: a peak q-axis phase current in a delta winding is not the current a drive reports on its bus. It is left open here and will be settled in part two with a proper derivation.</div>
+
+<h2 id="unverified">1.4 What we could not verify</h2>
+<ul>
+<li>No source gives the stack length, the magnet grade, the wire gauge or number of turns, or the mass of the stator or rotor. The lamination diameters are the catalogue values for this motor class, not measured on a Unitree part; the magnet size and air gap are borrowed from an open-source build on the same stator; the bell and hub are drawn from photographs.</li>
+<li>The air gap, which the drawings show as a thin line, has not been measured by anyone.</li>
+<li>Electrical values are from one unit, measured once, by one team.</li>
+<li>The 18-slot, 16-pole figure quoted for the G1 knee motor comes from a single secondary report and is used here only as a comparison.</li>
+</ul>
+
+<h2 id="sources">Sources</h2>
+<ol class="srcs">
+<li>Unitree, <i>GO-M8010-6 Motor User Manual V1.0</i> (2022) and product page unitree.com/go1/motor. Ratings, 6.33 ratio, stator steel, coating, impregnation, winding.</li>
+<li>Simplexity Product Development, <i>Unitree Go2 Motor Teardown</i> (July 2025). Photographs, counts, delta winding, electrical measurements.</li>
+</ol>
+
+<p class="meta" style="margin-top:2rem">Part two of this chapter: the decisions behind the design, and how the stator is made. Part three: the rotor, assembly and test.</p>
+</article>
+
+<footer class="site-footer"><div class="inner"><a href="../../">← Series</a> · written by mgsa</div></footer>
+</body>
+</html>

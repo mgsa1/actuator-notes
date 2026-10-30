@@ -5,27 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>How three currents turn a rotor · Actuator notes</title>
 <meta name="description" content="Interactive model of the rotating field in a brushless motor on a real stator: phase currents, torque angle, six-step vs sinusoidal drive, timing errors, load steps and speed control.">
-<link rel="stylesheet" href="../style.css">
-<link rel="stylesheet" href="../blog.css">
+<link rel="stylesheet" href="../style.css?v=2">
+<link rel="stylesheet" href="../blog.css?v=2">
 <script src="../app.js" defer></script>
 <script src="field.js" defer></script>
 <style>
   figure.key { margin: 1rem 0 1.6rem; max-width: 960px; }
   .key-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: start; }
   @media (max-width: 720px) { .key-grid { grid-template-columns: 1fr; } }
-  .key svg.diagram { width: 100%; height: auto; display: block; border: 1px solid var(--line-soft); border-radius: var(--radius); background: var(--surface); }
+  .key svg.diagram { width: 100%; height: auto; display: block; border: 1px solid var(--line); background: var(--surface); }
   table.key-table { border-collapse: collapse; width: 100%; font-size: .9rem; margin: 0; }
-  table.key-table th { text-align: left; font-weight: 650; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 0 8px 6px 0; border-bottom: 1px solid var(--line); }
+  table.key-table th { text-align: left; font-weight: 500; font-size: .84rem; color: var(--ink); padding: 0 8px 6px 0; border-bottom: 1px solid var(--line); }
   table.key-table td { padding: 7px 8px 7px 0; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
   table.key-table td.n { width: 24px; font-variant-numeric: tabular-nums; color: var(--muted); }
   table.key-table td.sym { width: 64px; }
   table.key-table td.sym svg { width: 56px; height: 20px; display: block; }
-  table.key-table td.el { width: 120px; font-weight: 600; }
+  table.key-table td.el { width: 120px; font-weight: 500; color: var(--ink); }
   figcaption.key-cap { font-size: .86rem; color: var(--ink-2); margin-top: 10px; max-width: 760px; text-align: left; }
   @media (max-width: 720px) { table.key-table td.el { width: 90px; } }
-  figcaption.key-cap b { color: var(--ink); }
+  figcaption.key-cap b { color: var(--ink); font-weight: 500; }
   .num { fill: var(--surface); stroke: var(--ink); stroke-width: 1.2; }
-  .numt { fill: var(--ink); font-size: 9px; font-weight: 700; }
+  .numt { fill: var(--ink); font-size: 9px; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -152,6 +152,6 @@
 <p class="meta" style="margin-top:2rem">Runs in your browser, sends nothing. Electrical degrees = mechanical degrees × <i>p</i>.</p>
 </article>
 
-<footer class="site-footer"><div class="inner"><a href="../">← All posts</a> · Written by Matthieu</div></footer>
+<footer class="site-footer"><div class="inner"><a href="../">← All posts</a> · written by mgsa</div></footer>
 </body>
 </html>
